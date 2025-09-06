@@ -10,6 +10,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      docker:
+        image: docker:20.10.24-dind
+        options: --privileged
+        ports:
+          - 5432:5432
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -19,6 +26,11 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+
+    - name: Set up Docker
+      run: |
+        sudo systemctl start docker
+        docker info
 
     - name: Build with Maven
       run: mvn clean install
