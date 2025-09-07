@@ -1,16 +1,23 @@
 package com.example.budget_tracker;
-
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import com.example.budget_tracker.model.User;
+import com.example.budget_tracker.repository.UserRepository;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.*;
 
-@SpringBootTest
-@Testcontainers // 👈 this tells JUnit to manage container lifecycle
-class BudgetTrackerApplicationTests {
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Testcontainers
+class UserEndpointIntegrationTest {
 
 	@SuppressWarnings("resource")
     @Container
@@ -20,6 +27,7 @@ class BudgetTrackerApplicationTests {
             .withPassword("password");
 
     @DynamicPropertySource
+	@SuppressWarnings("unused")
     static void overrideProps(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
         registry.add("spring.datasource.username", postgres::getUsername);
@@ -30,4 +38,34 @@ class BudgetTrackerApplicationTests {
     void contextLoads() {
         // just verifies the Spring context boots successfully with Testcontainers
     }
+
+	@LocalServerPort
+	int port;
+
+	@Autowired
+	private TestRestTemplate restTemplate;
+
+	@Test
+	void testCreateAndGetUser(){
+		// Create user via POST
+		User user = new User("Hajar", "Moutaki", "hajar@example.com", "password123");
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<User> request = new HttpEntity<>(user, headers);
+		ResponseEntity<User> postResponse = restTemplate.postForEntity(
+            	"http://localhost:" + port + "/users",
+            	request,
+            	User.class
+        );
+        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+        // Retrieve users via GET
+        ResponseEntity<User[]> getResponse = restTemplate.getForEntity(
+                "http://localhost:" + port + "/users",
+                User[].class
+        );
+        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(getResponse.getBody()).hasSize(1);
+        assertThat(getResponse.getBody()[0].getEmail()).isEqualTo("hajar@example.com");
+	}
 }
