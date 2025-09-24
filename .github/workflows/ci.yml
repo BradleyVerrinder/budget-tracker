@@ -15,37 +15,44 @@ jobs:
       pull-requests: write
 
     services:
-      docker:
-        image: docker:20.10.24-dind
-        options: --privileged
+      postgres:
+        image: ca95f67ffb26
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: budget_tracker
         ports:
           - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d budget_tracker"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Java
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    - name: Set up Docker
-      run: |
-        sudo systemctl start docker
-        docker info
+      - name: Build with Maven
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/budget_tracker
+          SPRING_DATASOURCE_USERNAME: postgres
+          SPRING_DATASOURCE_PASSWORD: password
+        run: mvn clean install
 
-    - name: Build with Maven
-      run: mvn clean install
+      - name: Upload JUnit test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: target/surefire-reports/*.xml
 
-    - name: Upload JUnit test reports
-      uses: actions/upload-artifact@v4
-      with:
-        name: junit-report
-        path: target/surefire-reports/*.xml
-
-    - name: Publish test summary
-      uses: mikepenz/action-junit-report@v4
-      with:
-        report_paths: 'target/surefire-reports/*.xml'
+      - name: Publish test summary
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: 'target/surefire-reports/*.xml'
