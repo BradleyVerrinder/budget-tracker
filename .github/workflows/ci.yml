@@ -16,7 +16,7 @@ jobs:
 
     services:
       postgres:
-        image: ca95f67ffb26
+        image: postgres:latest
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
