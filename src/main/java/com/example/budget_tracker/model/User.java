@@ -16,9 +16,7 @@ public class User{
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    private String firstname;
-    private String secondname;
-
+    private String username;
     @Email
     @NotBlank
     private String email;
@@ -32,9 +30,8 @@ public class User{
     }
 
     // Constructor
-    public User(String firstname, String secondname, String email, String password){
-        this.firstname = firstname;
-        this.secondname = secondname;
+    public User(String username, String email, String password){
+        this.username = username;
         this.email = email;
         this.password = password;
     }
@@ -44,12 +41,8 @@ public class User{
         return id;
     }
 
-    public String getFirstname(){
-        return firstname;
-    }
-
-    public String getSecondname(){
-        return secondname;
+    public String getUsername(){
+        return username;
     }
 
     public String getEmail(){
@@ -65,12 +58,8 @@ public class User{
         this.id = id;
     }
 
-    public void setFirstname(String firstname){
-        this.firstname = firstname;
-    }
-
-    public void setSecondname(String secondname){
-        this.secondname = secondname;
+    public void setUsername(String username){
+        this.username = username;
     }
 
     public void setEmail(String email){
