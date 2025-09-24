@@ -14,10 +14,11 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
-import com.example.budget_tracker.model.User;
+import com.example.budget_tracker.dto.RegisterRequest;
+import com.example.budget_tracker.dto.UserResponse;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test") // Use H2 in-memory database for CI
+@ActiveProfiles("test") // Use H2 in-memory DB for CI
 class UserEndpointIntegrationTest {
 
     @LocalServerPort
@@ -28,31 +29,27 @@ class UserEndpointIntegrationTest {
 
     @Test
     void contextLoads() {
-        // Verifies the Spring context boots successfully
+        // Verifies Spring context boots successfully
     }
 
     @Test
-    void testCreateAndGetUser() {
-        // Create user via POST
-        User user = new User("Hajar", "hajar@example.com", "password123");
+    void testRegisterUser() {
+        // Create the record with constructor
+        RegisterRequest requestBody = new RegisterRequest("hajar", "password123");
+    
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<User> request = new HttpEntity<>(user, headers);
-
-        ResponseEntity<User> postResponse = restTemplate.postForEntity(
-            "http://localhost:" + port + "/users",
+    
+        HttpEntity<RegisterRequest> request = new HttpEntity<>(requestBody, headers);
+    
+        ResponseEntity<UserResponse> postResponse = restTemplate.postForEntity(
+            "http://localhost:" + port + "/api/auth/register",
             request,
-            User.class
+            UserResponse.class
         );
-        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-
-        // Retrieve users via GET
-        ResponseEntity<User[]> getResponse = restTemplate.getForEntity(
-            "http://localhost:" + port + "/users",
-            User[].class
-        );
-        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(getResponse.getBody()).hasSize(1);
-        assertThat(getResponse.getBody()[0].getEmail()).isEqualTo("hajar@example.com");
+    
+        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(postResponse.getBody()).isNotNull();
+        assertThat(postResponse.getBody().username()).isEqualTo("hajar");
     }
 }
