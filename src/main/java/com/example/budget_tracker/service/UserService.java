@@ -2,13 +2,13 @@ package com.example.budget_tracker.service;
 
 import java.util.List;
 
-import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.budget_tracker.dto.RegisterRequest;
 import com.example.budget_tracker.model.User;
 import com.example.budget_tracker.repository.UserRepository;
-
-import jakarta.transaction.Transactional;
 
 @Service
 public class UserService {
