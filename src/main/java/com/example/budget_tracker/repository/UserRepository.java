@@ -10,5 +10,6 @@ import com.example.budget_tracker.model.User;
 public interface UserRepository extends JpaRepository<User, Long>{ // User = my entity, Long = the type of my primary key (ID)
     Optional<User> findByEmail(String email);
     boolean existsByUsername(String username);
+    Optional<User> findByUsername(String username);
     }
 
