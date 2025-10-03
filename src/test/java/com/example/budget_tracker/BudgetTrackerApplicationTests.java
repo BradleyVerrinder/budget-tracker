@@ -1,7 +1,6 @@
 package com.example.budget_tracker;
 
 import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.example.budget_tracker.dto.LoginRequest;
 import com.example.budget_tracker.dto.RegisterRequest;
 import com.example.budget_tracker.dto.UserResponse;
 
@@ -51,5 +51,39 @@ class UserEndpointIntegrationTest {
         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(postResponse.getBody()).isNotNull();
         assertThat(postResponse.getBody().username()).isEqualTo("hajar");
+    }
+
+    @Test
+    void testLogin(){
+        // Register a test user first
+        RegisterRequest requestBody = new RegisterRequest("testuser", "password123");
+    
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+    
+        HttpEntity<RegisterRequest> request = new HttpEntity<>(requestBody, headers);
+    
+        ResponseEntity<UserResponse> postResponse = restTemplate.postForEntity(
+            "http://localhost:" + port + "/api/auth/register",
+            request,
+            UserResponse.class
+        );
+    
+        assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        assertThat(postResponse.getBody()).isNotNull();
+        assertThat(postResponse.getBody().username()).isEqualTo("hajar");
+
+        // Login with same credentials
+        LoginRequest loginRequest = new LoginRequest("testuser", "password123");
+        ResponseEntity<UserResponse> loginResponse = restTemplate.postForEntity(
+            "/api/auth/login",
+            loginRequest,
+            UserResponse.class
+        );
+
+        // Check login worked
+        assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(loginResponse.getBody()).isNotNull();
+        assertThat(loginResponse.getBody().username()).isEqualTo("testuser");
     }
 }
