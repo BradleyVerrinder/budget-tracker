@@ -71,7 +71,7 @@ class UserEndpointIntegrationTest {
     
         assertThat(postResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         assertThat(postResponse.getBody()).isNotNull();
-        assertThat(postResponse.getBody().username()).isEqualTo("hajar");
+        assertThat(postResponse.getBody().username()).isEqualTo("testuser");
 
         // Login with same credentials
         LoginRequest loginRequest = new LoginRequest("testuser", "password123");
