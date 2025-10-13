@@ -1,24 +1,27 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Login</title>
-</head>
-<body>
-    <h2>Login</h2>
-    <form action="/api/auth/login" method="post">
-        <label>Username:</label>
-        <input type="text" name="username" required><br><br>
-        <label>Password:</label>
-        <input type="password" name="password" required><br><br>
-        <button type="submit">Login</button>
-    </form>
-    <!-- Show error if login failed -->
-    <div style="color:red;">
-        <script>
-            if (window.location.search.includes("error")) {
-                document.write("Invalid username or password!");
-            }
-        </script>
-    </div>
-</body>
-</html>
+<form id="loginForm">
+  <input id="username" required />
+  <input id="password" type="password" required />
+  <button type="submit">Login</button>
+</form>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ username, password })
+  });
+
+  if (res.ok) {
+    const body = await res.json(); // { token, user }
+    localStorage.setItem('token', body.token);
+    localStorage.setItem('user', JSON.stringify(body.user));
+    window.location.href = '/dashboard.html';
+  } else {
+    alert('Login failed');
+  }
+});
+</script>

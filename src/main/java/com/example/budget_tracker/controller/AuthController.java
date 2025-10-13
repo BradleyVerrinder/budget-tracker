@@ -1,5 +1,12 @@
 package com.example.budget_tracker.controller;
+
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,51 +16,48 @@ import com.example.budget_tracker.dto.LoginRequest;
 import com.example.budget_tracker.dto.RegisterRequest;
 import com.example.budget_tracker.dto.UserResponse;
 import com.example.budget_tracker.model.User;
+import com.example.budget_tracker.repository.UserRepository;
 import com.example.budget_tracker.service.AuthService;
-import com.example.budget_tracker.service.UserService;
-
-import jakarta.validation.Valid;
-
 
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-    private final UserService userService;
-    private final AuthService authService;
 
-    public AuthController(UserService userService, AuthService authService){
-        this.userService = userService;
+    private final AuthService authService;
+    private final UserRepository userRepository;
+
+    public AuthController(AuthService authService, UserRepository userRepository) {
         this.authService = authService;
+        this.userRepository = userRepository;
     }
 
-
-    // Controller receives request
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        //TODO: process POST request
-        try {
-            // Controller calls service
-            User savedUser = userService.registerUser(request);
+    public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest rq) {
+        UserResponse created = authService.register(rq.username(), rq.password());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
 
-            // Map entity to response DTO
-            UserResponse response = UserResponse.fromEntity(savedUser);
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest rq) {
+        // authenticate
+        UserResponse userResp = authService.loginAndVerify(rq);
+        // generate token
+        String token = authService.generateTokenFor(userResp);
+        // return token + user
+        return ResponseEntity.ok(Map.of("token", token, "user", userResp));
+    }
 
-            // Return safe JSON response
-            return ResponseEntity.status(201).body(response);
-
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body("Failed to register user");
+    @GetMapping("/me")
+    public ResponseEntity<?> me() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Not authenticated"));
         }
+        String username = auth.getName();
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return ResponseEntity.ok(new UserResponse(user.getId(), user.getUsername()));
     }
     
-    @PostMapping("/login")
-    public ResponseEntity<UserResponse> login(@RequestBody LoginRequest request) {
-        UserResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
-    }
 }

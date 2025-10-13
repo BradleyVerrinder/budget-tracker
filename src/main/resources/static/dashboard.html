@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+</head>
+<body>
+    <h1>WELCOME TO THE DASHBOARD - YOU ARE LOGGED IN SUCCESSFULLY</h1>
+</body>
+</html>
+<script>
+(async () => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  const res = await fetch('/api/auth/me', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+
+  if (res.ok) {
+    const user = await res.json();
+    document.getElementById('username').textContent = user.username;
+    // now fetch user-specific data, e.g. /api/budgets?userId=user.id (or backend uses SecurityContext)
+  } else {
+    // token invalid or expired
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login.html';
+  }
+})();
+</script>
