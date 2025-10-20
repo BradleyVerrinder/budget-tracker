@@ -1,5 +1,7 @@
 package com.example.budget_tracker;
 
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,15 +77,19 @@ class UserEndpointIntegrationTest {
 
         // Login with same credentials
         LoginRequest loginRequest = new LoginRequest("testuser", "password123");
-        ResponseEntity<UserResponse> loginResponse = restTemplate.postForEntity(
+        ResponseEntity<Map> loginResponse = restTemplate.postForEntity(
             "/api/auth/login",
             loginRequest,
-            UserResponse.class
+            Map.class
         );
 
         // Check login worked
         assertThat(loginResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(loginResponse.getBody()).isNotNull();
-        assertThat(loginResponse.getBody().username()).isEqualTo("testuser");
+
+        Map<String, Object> body = loginResponse.getBody();
+        Map<String, Object> user = (Map<String, Object>) body.get("user");
+        assertThat(user.get("username")).isEqualTo("testuser");
+        
     }
 }
